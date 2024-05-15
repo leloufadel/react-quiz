@@ -40,6 +40,13 @@ function reducer(state, action) {
           ...state, 
           index: state.index +1, answer: null,
         }
+        case "finish":
+          return {
+            ...state,
+            status: "finished",
+            highscore:
+              state.points > state.highscore ? state.points : state.highscore,
+          };
     default:
       throw new Error("Action type not recognized");
   }
@@ -71,13 +78,13 @@ export default function App() {
         {status === "active" && (
           <>
           <Progress numquestions={numquestions} index={index} points={points} 
-          maximumPoints={maximumPoints} />
+          maximumPoints={maximumPoints} answer={answer} />
            <Questions
             question={questions[index]}
             dispatch={dispatch}
             answer={answer}
           />
-          <NextButton answer={answer} dispatch={dispatch} />
+          <NextButton answer={answer} dispatch={dispatch} index={index} numquestions={numquestions} />
 
           </>
          
