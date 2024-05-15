@@ -6,6 +6,7 @@ import Error from "./Error";
 import StartScreen from "./StartScreen";
 import Questions from "./Questions";
 import NextButton from "./NextButton";
+import Progress from "./Progress";
 
 const initialState = {
   questions: [],
@@ -37,18 +38,20 @@ function reducer(state, action) {
       case "nextQuestion":
         return {
           ...state, 
-          index: state.index +1,
+          index: state.index +1, answer: null,
         }
     default:
       throw new Error("Action type not recognized");
   }
 }
 export default function App() {
-  const [{ questions, status, index, answer }, dispatch] = useReducer(
+  const [{ questions, status, index, answer, points }, dispatch] = useReducer(
     reducer,
     initialState
   );
   const numquestions = questions.length;
+  const maximumPoints = questions.reduce((acc, pts) => acc + pts.points, 0);
+
   useEffect(function () {
     fetch("http://localhost:9000/questions")
       .then((res) => res.json())
@@ -67,6 +70,8 @@ export default function App() {
         )}
         {status === "active" && (
           <>
+          <Progress numquestions={numquestions} index={index} points={points} 
+          maximumPoints={maximumPoints} />
            <Questions
             question={questions[index]}
             dispatch={dispatch}
