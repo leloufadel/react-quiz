@@ -8,6 +8,8 @@ import Questions from "./Questions";
 import NextButton from "./NextButton";
 import Progress from "./Progress";
 import FinishScreen from "./FinishScreen";
+import Footer from "./Footer";
+import Timer from "./Timer";
 
 const initialState = {
   questions: [],
@@ -17,6 +19,7 @@ const initialState = {
   answer: null,
   points: 0,
   highscore: 0,
+  secondsRemaining: 10,
 };
 
 function reducer(state, action) {
@@ -37,31 +40,40 @@ function reducer(state, action) {
             ? state.points + question.points
             : state.points,
       };
-      case "nextQuestion":
-        return {
-          ...state, 
-          index: state.index +1, answer: null,
-        }
-        case "Finish":
-          return {
-            ...state,
-            status: "finished",
-            highscore:
-              state.points > state.highscore ? state.points : state.highscore,
-          };
-          case "restart":
-            return { ...initialState, questions:state.questions,  status: "ready" };
+    case "nextQuestion":
+      return {
+        ...state,
+        index: state.index + 1,
+        answer: null,
+      };
+    case "Finish":
+      return {
+        ...state,
+        status: "finished",
+        highscore:
+          state.points > state.highscore ? state.points : state.highscore,
+      };
+    case "tick":
+      return {
+        ...state,
+        secondsRemaining: state.secondsRemaining - 1,
+        status: state.secondsRemaining === 0 ? "finished" : state.status,
+      };
+
+    case "restart":
+      return { ...initialState, questions: state.questions, status: "ready" };
     default:
       throw new Error("Action type not recognized");
   }
 }
 export default function App() {
-  const [{ questions, status, index, answer, points, highscore }, dispatch] = useReducer(
-    reducer,
-    initialState
-  );
+  const [{ questions, status, index, answer, points, highscore, secondsRemaining }, dispatch] =
+    useReducer(reducer, initialState);
   const numquestions = questions.length;
-  const maximumPossiblePoints = questions.reduce((acc, pts) => acc + pts.points, 0);
+  const maximumPossiblePoints = questions.reduce(
+    (acc, pts) => acc + pts.points,
+    0
+  );
 
   useEffect(function () {
     fetch("http://localhost:9000/questions")
@@ -77,26 +89,41 @@ export default function App() {
         {status === "loading" && <Loader />}
         {status === "error" && <Error />}
         {status === "finished" && (
-            <FinishScreen highscore ={highscore} points={points} maximumPossiblePoints= {maximumPossiblePoints} dispatch={dispatch} />
-          )}
+          <FinishScreen
+            highscore={highscore}
+            points={points}
+            maximumPossiblePoints={maximumPossiblePoints}
+            dispatch={dispatch}
+          />
+        )}
         {status === "ready" && (
           <StartScreen numquestions={numquestions} dispatch={dispatch} />
         )}
         {status === "active" && (
           <>
-          <Progress numquestions={numquestions} index={index} points={points} 
-          maximumPoints={maximumPossiblePoints} answer={answer} />
-           <Questions
-            question={questions[index]}
-            dispatch={dispatch}
-            answer={answer}
-          />
-          <NextButton answer={answer} dispatch={dispatch} index={index} numquestions={numquestions} />
+            <Progress
+              numquestions={numquestions}
+              index={index}
+              points={points}
+              maximumPoints={maximumPossiblePoints}
+              answer={answer}
+            />
+            <Questions
+              question={questions[index]}
+              dispatch={dispatch}
+              answer={answer}
+            />
+            <Footer>
+              <Timer dispatch={dispatch} secondsRemaining={secondsRemaining} />
+            </Footer>
+            <NextButton
+              answer={answer}
+              dispatch={dispatch}
+              index={index}
+              numquestions={numquestions}
+            />
           </>
-         
         )}
-        
-
       </Main>
     </div>
   );
